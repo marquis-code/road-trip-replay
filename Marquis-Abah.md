@@ -16,11 +16,11 @@ When moving the map marker around the map, the longitude and latitude of this lo
 
 # Challanges
 
-1. I had issues creating a Google cloud biling acount
+1. Issues creating a Google cloud biling acount
 
-2. I had issues creating the route line on the map
+2. Issues creating the route line on the map
 
-3. i had issues working with SQL dump
+3. Issues working with SQL dump
 
 
 # Functionality successfully imnplented
@@ -30,5 +30,5 @@ When moving the map marker around the map, the longitude and latitude of this lo
 
 
 # Comment
-Sincere appologies, written above is the update of my progress with the application and i aim to finisg it up if i had more time.
+Sincere appologies, written above is the update of my progress with the application and i aim to finishing it up if i had more time.
 
