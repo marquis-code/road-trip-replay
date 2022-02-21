@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, withScriptjs, withGoogleMap, Marker, InfoWindow } from 'react-google-maps';
-// import AutoComplete from 'react-google-autocomplete';
-import Geocode from 'react-geocode';
+import { withScriptjs, withGoogleMap, GoogleMap, Marker, InfoWindow } from 'react-google-maps';
 import axios from 'axios';
-
-Geocode.setApiKey('AIzaSyBR5Ra9kNvqfhR0vUe1oOkW-t_M27lJoAY');
-Geocode.setLanguage('en');
+import ModalItem from './components/Modal';
 
 const Map = () => {
-
   const [mapData, setMapData] = useState({
     address: '',
     city: '',
@@ -23,28 +18,46 @@ const Map = () => {
       lat: 0,
       lng: 0
     }
-  })
+  });
 
 
 
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        console.log('position' - position);
+    let geolocation = navigator.geolocation;
+    if (geolocation) {
+      geolocation.getCurrentPosition(function (position) {
+        let currentLatitude = position.coords.latitude;
+        let currentLongitude = position.coords.longitude;
+        console.log(currentLongitude, currentLatitude)
         setMapData({
           ...mapData,
           mapPosition: {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
+            lat: currentLatitude,
+            lng: currentLongitude
           },
           markerPosition: {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
+            lat: currentLatitude,
+            lng: currentLongitude
           }
         })
-      }, (error) => {
-        console.log(error.message)
+      }, function (error) {
+        if (error.code === error.PERMISSION_DENIED) {
+          console.log("User denied the request for Geolocation.");
+        }
+        else if (error.code === error.POSITION_UNAVAILABLE) {
+          console.log("Location information is unavailable.")
+        }
+        else if (error.code === error.TIMEOUT) {
+          console.log("The request to get user location timed out.")
+        }
+        else if (error.code === error.UNKNOWN_ERROR) {
+          console.log("An unknown error occurred.")
+        } else {
+          console.log(error)
+        }
       })
+    } else {
+      console.log('GeoLocation is Not Supported by this browser');
     }
   }, [mapData]);
 
@@ -52,111 +65,33 @@ const Map = () => {
     let newLatitude = e.latLng.lat();
     let newLongitude = e.latLng.lng();
     console.log(newLatitude, newLongitude)
-
-    Geocode.fromLatLng(newLatitude, newLongitude).then((response) => {
-      console.log(response);
-      const address = response.results[0].formatted_address;
-      let city, state, country;
-      for (let i = 0; i < response.results[0].address_components.length; i++) {
-        for (let j = 0; j < response.results[0].address_components[i].types.length; j++) {
-          switch (response.results[0].address_components[i].types[j]) {
-            case "locality":
-              city = response.results[0].address_components[i].long_name;
-              break;
-            case "administrative_area_level_1":
-              state = response.results[0].address_components[i].long_name;
-              break;
-            case "country":
-              country = response.results[0].address_components[i].long_name;
-              break;
-            default:
-              console.log('Location Not Available')
-          }
-        }
+    setMapData({
+      ...mapData,
+      markerPosition: {
+        lat: newLatitude,
+        lng: newLongitude
       }
-
-      setMapData({
-        address: (address) ? address : '',
-        city: (city) ? city : '',
-        state: (state) ? state : '',
-        country: (country) ? country : ''
-      })
     })
   }
 
   return (
-    <GoogleMap defaultZoom={mapData.zoom} defaultCenter={{ lat: mapData.mapPosition.lat, lng: mapData.mapPosition.lng }}>
-
-      <Marker draggable={true} onDragEnd={handleMarkerDrag} position={{ lat: mapData.markerPosition.lat, lng: mapData.markerPosition.lng }} >
-        <InfoWindow>
-          <div>{'Hello' - mapData.mapPosition.lat}</div>
-        </InfoWindow>
-      </Marker>
-
-      {/* <AutoComplete /> */}
-
-    </GoogleMap>
+    <div>
+      <GoogleMap defaultZoom={mapData.zoom} defaultCenter={{ lat: mapData.mapPosition.lat, lng: mapData.mapPosition.lng }}>
+        <Marker draggable={true} onDragEnd={handleMarkerDrag} position={{ lat: mapData.markerPosition.lat, lng: mapData.markerPosition.lng }} >
+          <InfoWindow>
+            <div>
+              <p className='text-sm font-mono font-semibold'>Latitude : {mapData.markerPosition.lat}</p>
+              <p className='text-sm font-mono font-semibold'>Longitude : {mapData.markerPosition.lng}</p>
+            </div>
+          </InfoWindow>
+        </Marker>
+      </GoogleMap>
+    </div>
   )
 }
 
 const WrapedMap = withScriptjs(withGoogleMap(Map));
 
-const ModalItem = ({ modal, modalFunction }) => {
-  const [modalData, setModalData] = useState({
-    origin: '',
-    destination: ''
-  });
-
-  const { origin, destination } = modalData;
-
-  const handleChange = (e) => {
-    let fieldName = e.target.name;
-    let fieldValue = e.target.value;
-    setModalData({
-      ...modalData, [fieldName]: fieldValue
-    })
-  }
-
-  const handlePost = async () => {
-    const { origin, destination } = modalData;
-    const formData = { origin, destination }
-    console.log(formData);
-    await axios.post('https://reqres.in/invalid-url', formData)
-      .then((response) => {
-        console.log(response.data);
-      })
-      .catch(error => {
-        console.log(error.message);
-      });
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    handlePost();
-  }
-
-  return (
-      <div className='flex justify-center items-center w-11/12 absolute mt-12'>
-        <div className='lg:hidden  bg-gray-500 py-3 px-10 rounded-lg shadow-sm z-40 ' onClick={() => { modalFunction(!modal) }}>
-          <form onSubmit={handleSubmit}>
-            <p className='font-semibold my-2 text-sm'>Enter Origin / Destination to simulate trip</p>
-            <div className='flex flex-col'>
-              <label className='text-mono font-semibold'>Origin</label>
-              <input type='text' name='origin' value={origin} onChange={handleChange} className='py-3 px-2 border my-3 rounded-lg shadow-sm outline-none ' placeholder='Enter Origin Location' />
-            </div>
-            <div className='flex flex-col'>
-              <label className='text-mono font-semibold'>Destination</label>
-              <input type='text' name='destination' value={destination} onChange={handleChange} className='py-3 px-2 border my-3 rounded-lg shadow-sm outline-none ' placeholder='Enter Destination' />
-            </div>
-
-            <div className='flex justify-center items-center my-3'>
-              <button className='py-2 rounded-lg bg-green-600 font-semibold text-white w-full select-none'>Show route</button>
-            </div>
-          </form>
-        </div>
-      </div>
-  )
-}
 
 const App = () => {
   const [mapInfo, setMapInfo] = useState({
@@ -194,12 +129,6 @@ const App = () => {
     handlePost();
   }
 
-  const getMapData = () => {
-    axios.get('https://api.github.com/users/mapbox')
-      .then((response) => {
-        console.log(response.data);
-      });
-  }
 
   return (
     <>
@@ -238,7 +167,7 @@ const App = () => {
             {showModal && <ModalItem modal={showModal} modalFunction={setShowModal} />}
             <div className='shadow-sm rounded-lg my-2 p-3 bg-gray-100'>
               <WrapedMap
-                googleMapURL='https://maps.googleapis.com/maps/api/js?key=AIzaSyBR5Ra9kNvqfhR0vUe1oOkW-t_M27lJoAY&v=3.exp&libraries=geometry,drawing,places'
+                googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_KEY}&v=3.exp&libraries=geometry,drawing,places`}
                 loadingElement={<div style={{ height: `100%` }} />}
                 containerElement={<div style={{ height: `400px` }} />}
                 mapElement={<div style={{ height: `100%` }} />}
@@ -253,11 +182,11 @@ const App = () => {
               <div className='border py-2 rounded-lg shadow-sm border px-3 text-sm font-mono font-semibold my-2'>Timestamp:</div>
             </div>
 
-            <button className='font-semibold my-2 rounded-lg py-2 px-4 text-sm border bg-green-500 text-white select-none' onClick={() => { setShowModal(!showModal); }}>Click me to simulate trip</button>
+            <button className='lg:hidden font-semibold my-2 rounded-lg py-2 px-4 text-sm border bg-green-500 text-white select-none' onClick={() => { setShowModal(!showModal); }}>Click me to simulate trip</button>
 
             <div className='Lg:flex justify-center items-center'>
               <p className='font-semibold font-sans my-2'>Click to view travel history</p>
-              <div className='cursor-pointer flex justify-between items-center px-6 bg-green-500 rounded-full py-1 my-3 lg:w-1/2' onClick={() => { getMapData() }}>
+              <div className='cursor-pointer flex justify-between items-center px-6 bg-green-500 rounded-full py-1 my-3 lg:w-1/2'>
                 <div><img src='./car.svg' className='h-10 w-10' alt='cars' /></div>
                 <div>
                   <h1 className='font-semibold text-xl'>UberX</h1>
