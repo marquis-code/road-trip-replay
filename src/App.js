@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import { withScriptjs, withGoogleMap, GoogleMap, Marker, InfoWindow } from 'react-google-maps';
 import axios from 'axios';
 import ModalItem from './components/Modal';
@@ -19,8 +19,6 @@ const Map = () => {
       lng: 0
     }
   });
-
-
 
   useEffect(() => {
     let geolocation = navigator.geolocation;
@@ -167,7 +165,7 @@ const App = () => {
             {showModal && <ModalItem modal={showModal} modalFunction={setShowModal} />}
             <div className='shadow-sm rounded-lg my-2 p-3 bg-gray-100'>
               <WrapedMap
-                googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_KEY}&v=3.exp&libraries=geometry,drawing,places`}
+                googleMapURL='https://maps.googleapis.com/maps/api/js?key=AIzaSyBR5Ra9kNvqfhR0vUe1oOkW-t_M27lJoAY&v=3.exp&libraries=geometry,drawing,places'
                 loadingElement={<div style={{ height: `100%` }} />}
                 containerElement={<div style={{ height: `400px` }} />}
                 mapElement={<div style={{ height: `100%` }} />}
